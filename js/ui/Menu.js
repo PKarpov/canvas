@@ -16,10 +16,9 @@ class Menu {
                 ctx.fillStyle = "#ffc448";
                 ctx.font = "100px system-ui";
                 ctx.textAlign  = "center";
-                ctx.fillText(label, width * 0.5, 150);
+                ctx.fillText(label, Main.width * 0.5, 150);
             }
             this.selected = newId;
-            let button;
             for (let i = 0; i < this.quantity; i++) {
                 if (i === newId) {
                     this.buttons[i].drawActive();

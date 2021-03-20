@@ -4,7 +4,7 @@ class Main {
         Main.ctx = this.canvas.getContext("2d");
         Main.width = this.canvas.width;
         Main.height = this.canvas.height;
-        Main.ready = true;
+        Main.busy = false;
 
         this.start = new Menu(["PLAY GAME", "GO OUT"], [glob.EVENT_PLAY, glob.EVENT_EXIT]);
         this.finish = new Menu(["PLAY AGAIN", "GO OUT"], [glob.EVENT_PLAY, glob.EVENT_EXIT]);
@@ -13,24 +13,6 @@ class Main {
         this.changeMain = this.changeState.bind(this);
         this.exit = this.exitGame.bind(this);
         this.changeState();
-    }
-
-    update() {
-/*        if (this.state === 1) {
-Google IMA SDK
-
-leonid.foigelman@play.works
-
-            this.x += 1;
-            this.y += 1;
-            this.ball.drawBall(this.x, this.y);
-            requestAnimationFrame(()=>this.update());
-
-        } else if (this.state === 2) {
-
-        } else {
-
-        }*/
     }
 
     changeState() {
@@ -52,16 +34,15 @@ leonid.foigelman@play.works
         }
     }
 
-    exitGame(e) {
+    exitGame() {
         document.removeEventListener("keydown", this.keyListener, false);
         document.removeEventListener(glob.EVENT_PLAY, this.changeMain, false);
         document.removeEventListener(glob.EVENT_EXIT, this.exit, false);
         window.open("http://44.zzz.com.ua/", '_self');
-
     }
 
     keyDownHandler(e) {
-        if(!Main.ready) return;
+        if(Main.busy) return;
         // console.dir(e)
         let key = e.key;
         if (key === "Backspace") {
@@ -73,7 +54,7 @@ leonid.foigelman@play.works
     exit = this.exitGame.bind(this);
 
 }
-var main = new Main();
+const main = new Main();
 // window.requestAnimationFrame(main.update.bind(main));
 document.addEventListener("keydown", main.keyListener, false);
 document.addEventListener(glob.EVENT_PLAY, main.changeMain, false);

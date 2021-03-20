@@ -3,30 +3,56 @@ class Game {
         this.artist = new Artist();
     }
 
-    async drawNew() {
-        Main.ready = false;
-        Main.ctx.clearRect(0, 0, Main.width, Main.height);
-        const dd = 200;
-        const dy = 70;
-        const ww = Main.height - dy * 2;
-        let x0 = (Main.width - dd) * 0.5;
-        let x1 = (Main.width + dd) * 0.5;
-        let y0 = dy;
-        let y1 = Main.height - dy;
-        await this.artist.drawLine(x0, y0, x0, y1);
-        await this.artist.drawLine(x1, y0, x1, y1);
-        x0 = (Main.width - ww) * 0.5;
-        x1 = (Main.width + ww) * 0.5;
-        y0 = (Main.height - dd) * 0.5;
-        y1 = (Main.height + dd) * 0.5;
-        await this.artist.drawLine(x0, y0, x1, y0);
-        await this.artist.drawLine(x0, y1, x1, y1);
-        Main.ready = true;
-
-        // this.exitBt.drawNorm();
-        // this.playBt.drawActive();
+    drawNew() {
+        this.row = 1;
+        this.col = 1;
+        this.field = [[-1,-1,-1],
+            [-1,-1,-1],
+            [-1,-1,-1]
+        ];
+        Main.busy = true;
+        this.artist.drawingField(this.col, this.row)
+            .then(()=>{
+                this.yourTurn = true;
+                Main.busy = false;
+                console.log("!!!!!");
+            });
     }
-    takeAction(key) {
 
+    takeAction(key) {
+        let col = this.col;
+        let row = this.row;
+        if (key === "Enter") {
+            if(this.field[this.row][this.col] > -1) return;
+            Main.busy = true;
+            if (this.yourTurn) {
+                this.artist.startDrawingCross(this.col, this.row)
+                    .then(()=>{
+                        this.field[this.row][this.col] = 1;
+                        Main.busy = false;
+                        console.log("#######");
+                    })
+            } else {
+                this.artist.startDrawingZero(this.col, this.row);
+                this.field[this.row][this.col] = 0;
+            }
+            this.yourTurn = !this.yourTurn;
+            return;
+        } else if (key === "ArrowUp") {
+            --row;
+        } else if (key === "ArrowDown") {
+            ++row;
+        } else if (key === "ArrowRight") {
+            ++col;
+        } else if (key === "ArrowLeft") {
+            --col
+        }
+
+        if (col > -1 && col< 3 && row > -1 && row < 3 ) {
+            this.artist.drawCell(this.col, this.row, false, this.field[this.row][this.col]);
+            this.artist.drawCell(col, row, true, this.field[row][col]);
+            this.col = col;
+            this.row = row;
+        }
     }
 }

@@ -81,7 +81,7 @@ class Artist {
     drawingLine() {
         var xx = this.x0 + this.dx;
         var yy = this.y0 + this.dy;
-        this.drawLine(this.x0, this.y0, xx, yy);
+        this.drawSegment(this.x0, this.y0, xx, yy);
         if (--this.steps > 0) {
             this.x0 = xx;
             this.y0 = yy;
@@ -95,12 +95,16 @@ class Artist {
         }
     }
 
-    startDrawingZero (col, row) {
+    async startDrawingZero (col, row) {
         this.x0 = this.X0 + col * this.size;
         this.y0 = this.Y0 + row * this.size;
         this.angle = 0;
         this.dAngle = 0.4;
         requestAnimationFrame(() => this.drawingZero());
+        return new Promise((resolve)=>{
+            this.resolve = resolve;
+        });
+
     }
 
     drawingZero () {
@@ -113,9 +117,12 @@ class Artist {
             this.angle = angle;
             requestAnimationFrame(() => this.drawingZero());
         } else {
-            Main.busy = false;
+            if (this.resolve){
+                this.resolve();
+                this.resolve = null;
+            }
         }
-   }
+    }
 
     async startDrawingCross(col, row) {
         const dd = this.crossSize;
@@ -124,5 +131,4 @@ class Artist {
         await this.startDrawingLine((x0 - dd), (y0 - dd), (x0 + dd), (y0 + dd),10);
         await this.startDrawingLine((x0 - dd), (y0 + dd), (x0 + dd), (y0 - dd), 10);
     }
-
 }

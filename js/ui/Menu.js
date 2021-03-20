@@ -8,41 +8,39 @@ class Menu {
         }
     }
 
-    drawNew(newId, label, open) {
-        if (open) {
-            const ctx = Main.ctx;
-            ctx.clearRect(0, 0, Main.width, Main.height);
-            if (label) {
-                ctx.fillStyle = "#ffc448";
-                ctx.font = "100px system-ui";
-                ctx.textAlign  = "center";
-                ctx.fillText(label, Main.width * 0.5, 150);
-            }
-            this.selected = newId;
-            for (let i = 0; i < this.quantity; i++) {
-                if (i === newId) {
-                    this.buttons[i].drawActive();
-                } else {
-                    this.buttons[i].drawNorm();
-                }
+    drawNew(newId, label) {
+        const ctx = Main.ctx;
+        ctx.clearRect(0, 0, Main.width, Main.height);
+        if (label) {
+            ctx.fillStyle = "#ffc448";
+            ctx.font = "100px system-ui";
+            ctx.textAlign  = "center";
+            ctx.fillText(label, Main.width * 0.5, 150);
+        }
+        this.selected = newId;
+        for (let i = 0; i < this.quantity; i++) {
+            if (i === newId) {
+                this.buttons[i].drawActive();
+            } else {
+                this.buttons[i].drawNorm();
             }
         }
+    }
 
-        if(newId > -1 && newId < this.quantity) {
+    takeAction(key) {
+        let newId = this.selected;
+        if (key === "Enter") {
+            document.dispatchEvent(new Event(this.events[this.selected]));
+            return;
+        } else if (key === "ArrowUp") {
+            --newId;
+        } else if (key === "ArrowDown") {
+            ++newId;
+        }
+        if (newId > -1 && newId < this.quantity) {
             this.buttons[this.selected].drawNorm();
             this.buttons[newId].drawActive();
             this.selected = newId;
         }
     }
-
-    takeAction(key) {
-        if (key === "Enter") {
-            document.dispatchEvent(new Event(this.events[this.selected]));
-        } else if (key === "ArrowUp") {
-            this.drawNew(this.selected - 1);
-        } else if (key === "ArrowDown") {
-            this.drawNew(this.selected + 1);
-        }
-    }
-
 }

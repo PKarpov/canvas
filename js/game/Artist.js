@@ -32,10 +32,11 @@ class Artist {
         y1 = (Main.height + this.size) * 0.5;
         await this.startDrawingLine(x0, y0, x1, y0);
         await this.startDrawingLine(x0, y1, x1, y1);
-        this.drawCell(col, row, true);
+        this.drawCell(row, col, true);
     }
 
-    drawCell(col, row, pad, sign) {
+    drawCell(row, col, pad, sign) {
+        console.log(sign, '>>>>>>>');
         const ctx = Main.ctx;
         const x0 = this.X0 + col * this.size;
         const y0 = this.Y0 + row * this.size;
@@ -64,7 +65,7 @@ class Artist {
         ctx.stroke();
     }
 
-    startDrawingLine(x0, y0, x1, y1, speed = 40) {
+    startDrawingLine(x0, y0, x1, y1, speed = 50, win) {
         this.x0 = x0;
         this.y0 = y0;
         const dx = (x1 - x0);
@@ -72,6 +73,11 @@ class Artist {
         this.steps = Math.round(Math.sqrt(dx ** 2 + dy ** 2) / speed);
         this.dx = dx / this.steps;
         this.dy = dy / this.steps;
+        if (win) {
+            this.x0 -= this.dx;
+            this.y0 -= this.dy;
+            this.steps += 2;
+        }
         requestAnimationFrame(() => this.drawingLine());
         return new Promise((resolve)=>{
             this.resolve = resolve;
@@ -79,23 +85,20 @@ class Artist {
     }
 
     drawingLine() {
-        var xx = this.x0 + this.dx;
-        var yy = this.y0 + this.dy;
-        this.drawSegment(this.x0, this.y0, xx, yy);
-        if (--this.steps > 0) {
+        if (this.steps-- > 0) {
+            const xx = this.x0 + this.dx;
+            const yy = this.y0 + this.dy;
+            this.drawSegment(this.x0, this.y0, xx, yy);
+            requestAnimationFrame(() => this.drawingLine());
             this.x0 = xx;
             this.y0 = yy;
-            requestAnimationFrame(() => this.drawingLine());
-        } else {
-            if (this.resolve){
-                this.resolve();
-                this.resolve = null;
-            }
-
+        } else if (this.resolve){
+            this.resolve();
+            this.resolve = null;
         }
     }
 
-    async startDrawingZero (col, row) {
+    startDrawingZero (col, row) {
         this.x0 = this.X0 + col * this.size;
         this.y0 = this.Y0 + row * this.size;
         this.angle = 0;
@@ -104,31 +107,38 @@ class Artist {
         return new Promise((resolve)=>{
             this.resolve = resolve;
         });
-
     }
 
     drawingZero () {
-        const angle = this.angle + this.dAngle;
-        const ctx = Main.ctx;
-        ctx.beginPath();
-        ctx.arc(this.x0, this.y0, this.zeroSize, this.angle, angle);
-        ctx.stroke();
-        if(angle< Math.PI*2) {
+        if (this.angle < Math.PI * 2) {
+            const angle = this.angle + this.dAngle;
+            const ctx = Main.ctx;
+            ctx.beginPath();
+            ctx.arc(this.x0, this.y0, this.zeroSize, this.angle, angle);
+            ctx.stroke();
             this.angle = angle;
             requestAnimationFrame(() => this.drawingZero());
-        } else {
-            if (this.resolve){
-                this.resolve();
-                this.resolve = null;
-            }
-        }
+        } else if (this.resolve){
+            this.resolve();
+            this.resolve = null;
+    }
     }
 
     async startDrawingCross(col, row) {
         const dd = this.crossSize;
         const x0 = this.X0 + col * this.size;
         const y0 = this.Y0 + row * this.size;
-        await this.startDrawingLine((x0 - dd), (y0 - dd), (x0 + dd), (y0 + dd),10);
-        await this.startDrawingLine((x0 - dd), (y0 + dd), (x0 + dd), (y0 - dd), 10);
+        await this.startDrawingLine((x0 - dd), (y0 - dd), (x0 + dd), (y0 + dd),20);
+        await this.startDrawingLine((x0 - dd), (y0 + dd), (x0 + dd), (y0 - dd), 20);
+    }
+
+    startDrawingWin(r0, c0, r1, c1) {
+        ctx.beginPath();
+        Main.ctx.strokeStyle = "#ff0000";
+        const x0 = this.X0 + c0 * this.size;
+        const y0 = this.Y0 + r0 * this.size;
+        const x1 = this.X0 + c1 * this.size;
+        const y1 = this.Y0 + r1 * this.size;
+        return this.startDrawingLine(x0, y0, x1, y1, 80, true);
     }
 }

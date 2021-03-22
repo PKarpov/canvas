@@ -55,10 +55,27 @@ class Main {
 
 }
 const main = new Main();
-// window.requestAnimationFrame(main.update.bind(main));
 document.addEventListener("keydown", main.keyListener, false);
 document.addEventListener(glob.EVENT_PLAY, main.changeMain, false);
 document.addEventListener(glob.EVENT_EXIT, main.exit, false);
+
 // document.addEventListener(glob.EVENT_EXIT, main.exitGame.bind(main), {once:true});
 // document.addEventListener("keyup", keyUpHandler, false);
+/*
+function draw() {
+    var canvas = document.getElementById('canvas');
+    if (canvas.getContext){
+        var ctx = canvas.getContext('2d');
 
+        ctx.beginPath();
+        ctx.arc(75,75,50,0,Math.PI*2,true); // Внешняя окружность
+        ctx.moveTo(110,75);
+        ctx.arc(75,75,35,0,Math.PI,false);  // рот (по часовой стрелке)
+        ctx.moveTo(65,65);
+        ctx.arc(60,65,5,0,Math.PI*2,true);  // Левый глаз
+        ctx.moveTo(95,65);
+        ctx.arc(90,65,5,0,Math.PI*2,true);  // Правый глаз
+        ctx.stroke();
+    }
+}
+draw()*/

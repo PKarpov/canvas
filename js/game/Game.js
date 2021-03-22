@@ -119,7 +119,7 @@ class Game {
 
         if (!ok) {
             if (this.freeCells.length === 0) {
-                document.dispatchEvent(new Event(glob.EVENT_FIELD_FULL));
+                document.dispatchEvent(new CustomEvent(glob.EVENT_END_GAME, { 'detail': 'Field full.' }));
             } else {
                 this.freeCells
                 Main.busy = false;
@@ -130,6 +130,8 @@ class Game {
             console.log(...this.allLines[line][0], ...this.allLines[line][2]);
             this.artist.startDrawingWin(...this.allLines[line][0], ...this.allLines[line][2])
                 .then(() => {
+                    const labet = this.youTurn ? 'You WON!!!' : 'You LOSE.';
+                    document.dispatchEvent(new CustomEvent(glob.EVENT_END_GAME, { 'detail': labet }));
 
                     console.log("you win!!!")
                 })

@@ -8,7 +8,7 @@ class Menu {
         }
     }
 
-    drawNew(newId, label) {
+    drawNew(select, label) {
         const ctx = Main.ctx;
         ctx.clearRect(0, 0, Main.width, Main.height);
         if (label) {
@@ -17,9 +17,9 @@ class Menu {
             ctx.textAlign  = "center";
             ctx.fillText(label, Main.width * 0.5, 150);
         }
-        this.selected = newId;
+        this.selected = select;
         for (let i = 0; i < this.quantity; i++) {
-            if (i === newId) {
+            if (i === select) {
                 this.buttons[i].drawActive();
             } else {
                 this.buttons[i].drawNorm();
@@ -28,19 +28,19 @@ class Menu {
     }
 
     takeAction(key) {
-        let newId = this.selected;
+        let select = this.selected;
         if (key === "Enter") {
             document.dispatchEvent(new Event(this.events[this.selected]));
             return;
         } else if (key === "ArrowUp") {
-            --newId;
+            --select;
         } else if (key === "ArrowDown") {
-            ++newId;
+            ++select;
         }
-        if (newId > -1 && newId < this.quantity) {
+        if (select > -1 && select < this.quantity) {
             this.buttons[this.selected].drawNorm();
-            this.buttons[newId].drawActive();
-            this.selected = newId;
+            this.buttons[select].drawActive();
+            this.selected = select;
         }
     }
 }

@@ -2,15 +2,15 @@ class Game {
     constructor () {
         this.artist = new Artist();
         this.allLines = [
-            [[0,0],[0,1],[0,2]],
-            [[1,0],[1,1],[1,2]],
-            [[2,0],[2,1],[2,2]],
-            [[0,0],[1,0],[2,0]],
-            [[0,1],[1,1],[2,1]],
-            [[0,2],[1,2],[2,2]],
-            [[0,0],[1,1],[2,2]],
-            [[2,0],[1,1],[0,2]],
-        ]
+            [[0, 0], [0, 1], [0, 2]],
+            [[1, 0], [1, 1], [1, 2]],
+            [[2, 0], [2, 1], [2, 2]],
+            [[0, 0], [1, 0], [2, 0]],
+            [[0, 1], [1, 1], [2, 1]],
+            [[0, 2], [1, 2], [2, 2]],
+            [[0, 0], [1, 1], [2, 2]],
+            [[2, 0], [1, 1], [0, 2]],
+        ];
         this.allCells = [
             {sign: -1, row: 0, col: 0, lines: [0,4,6]},
             {sign: -1, row: 0, col: 1, lines: [0,4]},
@@ -27,30 +27,31 @@ class Game {
         for (let cell of this.allCells) {
             this.cellsMatrix[cell.row][cell.col] = cell;
         }
-        this.youTurn = false;
+        this.veryFirst = false;
     }
 
-    drawNew(youTurn) {
-        for (let cell of this.allCells) {
-            cell.sign = -1;
-        }
+    drawNew() {
         this.freeCells = new Map();
         for(let cell of this.allCells) {
             cell.sign = -1;
-            this.freeCells.set(cell, -1);
+            this.freeCells.set(cell, {cell: cell, forAuto:{}});
         }
         this.row = 1;
         this.col = 1;
 
         Main.busy = true;
-        this.artist.drawingField(this.col, this.row)
+        Main.ctx.beginPath();
+        this.artist.drawLines(this.artist.getField())
             .then(()=>{
-                this.youTurn = !this.youTurn;
-                this.putСross = true;
+                this.veryFirst = !this.veryFirst;
+                this.youSign = this.veryFirst ? 1 : 0;
+                this.aiSign = this.veryFirst ? 0 : 1;
+                this.youTurn = this.veryFirst;
                 Main.busy = !this.youTurn;
-                if (!this.youFirst) {
+                if (!this.youTurn) {
                     this.autoMove();
                 }
+                this.artist.redrawCell(this.col, this.row, true);
             });
     }
 
@@ -60,7 +61,7 @@ class Game {
         let cell = this.cellsMatrix[row][col];
         if (key === "Enter") {
             if(this.freeCells.has(cell)) {
-                this.makeMove(cell, true)
+                this.makeMove(cell, this.youSign)
             }
             return;
         }
@@ -75,26 +76,25 @@ class Game {
             --col
         }
         if (col > -1 && col < 3 && row > -1 && row < 3) {
-            this.artist.drawCell(this.row, this.col, false, this.cellsMatrix[this.row][this.col].sign);
-            this.artist.drawCell(row, col,true, this.cellsMatrix[row][col].sign);
+            this.artist.redrawCell(this.row, this.col, false, this.cellsMatrix[this.row][this.col].sign);
+            this.artist.redrawCell(row, col,true, this.cellsMatrix[row][col].sign);
             this.col = col;
             this.row = row;
         }
     }
 
-    makeMove (cell) {
+    makeMove (cell, sign) {
+        cell.sign = sign;
         this.freeCells.delete(cell);
         Main.busy = true;
-        if (this.putСross) {
-            this.artist.startDrawingCross(cell.col, cell.row)
+        if (sign === 0) {
+            this.artist.startDrawingZero(cell.col, cell.row)
                 .then(()=>{
-                    cell.sign = 1;
                     this.checkField(cell);
                 })
         } else {
-            this.artist.startDrawingZero(cell.col, cell.row)
+            this.artist.drawLines(this.artist.getCross(cell.col, cell.row),30)
                 .then(()=>{
-                    cell.sign = 0;
                     this.checkField(cell);
                 })
         }
@@ -118,66 +118,31 @@ class Game {
         }
 
         if (!ok) {
-            if (this.freeCells.length === 0) {
+            if (this.freeCells.size === 0) {
                 document.dispatchEvent(new CustomEvent(glob.EVENT_END_GAME, { 'detail': 'Field full.' }));
             } else {
-                this.freeCells
-                Main.busy = false;
-
+                this.youTurn = !this.youTurn;
+                Main.busy = !this.youTurn;
+                if(!this.youTurn) {
+                    this.autoMove();
+                }
             }
         } else {
-            this.artist.drawCell(cell.row, cell.col, false, cell.sign);
-            console.log(...this.allLines[line][0], ...this.allLines[line][2]);
-            this.artist.startDrawingWin(...this.allLines[line][0], ...this.allLines[line][2])
+            this.artist.redrawCell(cell.row, cell.col, false, cell.sign);
+            this.artist.drawWin(...this.allLines[line][0], ...this.allLines[line][2])
                 .then(() => {
-                    const labet = this.youTurn ? 'You WON!!!' : 'You LOSE.';
-                    document.dispatchEvent(new CustomEvent(glob.EVENT_END_GAME, { 'detail': labet }));
-
-                    console.log("you win!!!")
+                    const label = this.youTurn ? 'You WON!!!' : 'You LOSE.';
+                    setTimeout(() => {
+                        document.dispatchEvent(new CustomEvent(glob.EVENT_END_GAME, {'detail': label}));
+                    }, 700);
                 })
-
-            // this.artist.startDrawingWin(...this.allLines[line][0], ...this.allLines[line][2])
-            //     .then(()=>{console.log("you win!!!")})
         }
-        this.youTurn = !this.youTurn;
-        this.putСross = !this.putСross;
-
     }
 
     autoMove(){
         setTimeout(()=>{
-            const cell = this.freeCells.get([...this.freeCells.keys()][Math.floor(Math.random() * this.freeCells.size)]);
-            this.makeMove(cell);
+            const cell = this.freeCells.get([...this.freeCells.keys()][Math.floor(Math.random() * this.freeCells.size)]).cell;
+            this.makeMove(cell, this.aiSign);
         }, (200 + Math.random() * 500))
     }
-
-        // let line;
-        // Main.busy = false;
-        // while (lines.length) {
-        //     let line = lines.shift();
-        //
-        //     if (this.cellsMatrix[this.l[0]][line[1]].sign === this.cellsMatrix[line[2]][line[3]].sign === this.cellsMatrix[line[4]][line[5]].sign){
-        //         Main.busy = true;
-        //         this.artist.drawCell(cell.col, cell.row, false, cell.sign)
-                // console.dir(this.cellsMatrix[line[0]][line[1]]);
-                // console.dir(this.cellsMatrix[line[2]][line[3]]);
-                // console.dir(cell);
-                // console.dir(line);
-            //     const win = [].concat(line);
-            //     win.push(cell.row, cell.col);
-            // console.log(win);
-            //     const r0 = Math.min(win[0], win[2], win[4]);
-            //     const r1 = Math.max(win[0], win[2], win[4]);
-            //     const c0 = Math.min(win[1], win[3], win[5]);
-            //     const c1 = Math.max(win[1], win[3], win[5]);
-            // console.log(c0, r0, c1, r1);
-            //     this.artist.startDrawingWin(c0, r0, c1, r1)
-            //         .then(()=>{console.log("you win!!!")})
-            //     console.log(lines);
-
-            // }
-        // }
-    // }
-
-
 }

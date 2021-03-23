@@ -10,7 +10,7 @@ class Menu {
 
     drawNew(select, label) {
         const ctx = Main.ctx;
-        ctx.clearRect(0, 0, Main.width, Main.height);
+        // Main.ctx.clearRect(0, 0, Main.width, Main.height);
         if (label) {
             ctx.fillStyle = "#ffc448";
             ctx.font = "100px system-ui";
@@ -25,6 +25,7 @@ class Menu {
                 this.buttons[i].drawNorm();
             }
         }
+        Main.busy = false;
     }
 
     takeAction(key) {

@@ -10,7 +10,7 @@ class Artist {
         this.Y0 = Main.height * 0.5 - this.size;
     }
 
-    async drawingField(col, row){
+    getField(){
         const ctx = Main.ctx;
         ctx.clearRect(0, 0, Main.width, Main.height);
         ctx.lineWidth = this.lineWidth;
@@ -23,20 +23,65 @@ class Artist {
         let x1 = (Main.width + this.size) * 0.5;
         let y0 = dy;
         let y1 = Main.height - dy;
-        await this.startDrawingLine(x0, y0, x0, y1);
-        await this.startDrawingLine(x1, y0, x1, y1);
+        const xy = [[x0, y0, x0, y1],[x1, y0, x1, y1]];
 
         x0 = (Main.width - ww) * 0.5;
         x1 = (Main.width + ww) * 0.5;
         y0 = (Main.height - this.size) * 0.5;
         y1 = (Main.height + this.size) * 0.5;
-        await this.startDrawingLine(x0, y0, x1, y0);
-        await this.startDrawingLine(x0, y1, x1, y1);
-        this.drawCell(row, col, true);
+        xy.push([x0, y0, x1, y0], [x0, y1, x1, y1]);
+
+        return xy;
     }
 
-    drawCell(row, col, pad, sign) {
-        console.log(sign, '>>>>>>>');
+    static drawHelp() {
+        const ctx = Main.ctx;
+        ctx.fillStyle = "#ffc448";
+        ctx.font = "24px system-ui";
+        ctx.textAlign  = "left";
+        ctx.fillText('keyboard control (arrows + Enter + Backspace)', 20, 710);
+    }
+
+    async drawLines(lines, speed = 70) {
+        for (let line of lines) {
+            await this.startDrawingLine(...line, speed);
+        }
+    }
+
+    startDrawingLine(x0, y0, x1, y1, speed = 70, win) {
+        this.x0 = x0;
+        this.y0 = y0;
+        const dx = (x1 - x0);
+        const dy = (y1 - y0);
+        this.steps = Math.round(Math.sqrt(dx ** 2 + dy ** 2) / speed);
+        this.dx = dx / this.steps;
+        this.dy = dy / this.steps;
+        if (win) {
+            this.x0 -= this.dx * 2;
+            this.y0 -= this.dy * 2;
+            this.steps += 4;
+        }
+        requestAnimationFrame(() => this.drawingLine());
+        return new Promise((resolve)=>{
+            this.resolve = resolve;
+        });
+    }
+
+    drawingLine() {
+        if (this.steps-- > 0) {
+            const xx = this.x0 + this.dx;
+            const yy = this.y0 + this.dy;
+            this.drawSegment(this.x0, this.y0, xx, yy);
+            requestAnimationFrame(() => this.drawingLine());
+            this.x0 = xx;
+            this.y0 = yy;
+        } else if (this.resolve){
+            this.resolve();
+            this.resolve = null;
+        }
+    }
+
+    redrawCell(row, col, pad, sign) {
         const ctx = Main.ctx;
         const x0 = this.X0 + col * this.size;
         const y0 = this.Y0 + row * this.size;
@@ -65,37 +110,19 @@ class Artist {
         ctx.stroke();
     }
 
-    startDrawingLine(x0, y0, x1, y1, speed = 50, win) {
-        this.x0 = x0;
-        this.y0 = y0;
-        const dx = (x1 - x0);
-        const dy = (y1 - y0);
-        this.steps = Math.round(Math.sqrt(dx ** 2 + dy ** 2) / speed);
-        this.dx = dx / this.steps;
-        this.dy = dy / this.steps;
-        if (win) {
-            this.x0 -= this.dx;
-            this.y0 -= this.dy;
-            this.steps += 2;
-        }
-        requestAnimationFrame(() => this.drawingLine());
-        return new Promise((resolve)=>{
-            this.resolve = resolve;
-        });
-    }
-
-    drawingLine() {
-        if (this.steps-- > 0) {
-            const xx = this.x0 + this.dx;
-            const yy = this.y0 + this.dy;
-            this.drawSegment(this.x0, this.y0, xx, yy);
-            requestAnimationFrame(() => this.drawingLine());
-            this.x0 = xx;
-            this.y0 = yy;
+    drawingZero () {
+        if (this.angle < Math.PI * 2) {
+            const angle = this.angle + this.dAngle;
+            const ctx = Main.ctx;
+            ctx.beginPath();
+            ctx.arc(this.x0, this.y0, this.zeroSize, this.angle, angle);
+            ctx.stroke();
+            this.angle = angle;
+            requestAnimationFrame(() => this.drawingZero());
         } else if (this.resolve){
             this.resolve();
             this.resolve = null;
-        }
+     }
     }
 
     startDrawingZero (col, row) {
@@ -109,36 +136,21 @@ class Artist {
         });
     }
 
-    drawingZero () {
-        if (this.angle < Math.PI * 2) {
-            const angle = this.angle + this.dAngle;
-            const ctx = Main.ctx;
-            ctx.beginPath();
-            ctx.arc(this.x0, this.y0, this.zeroSize, this.angle, angle);
-            ctx.stroke();
-            this.angle = angle;
-            requestAnimationFrame(() => this.drawingZero());
-        } else if (this.resolve){
-            this.resolve();
-            this.resolve = null;
-    }
-    }
-
-    async startDrawingCross(col, row) {
+    getCross(col, row) {
         const dd = this.crossSize;
         const x0 = this.X0 + col * this.size;
         const y0 = this.Y0 + row * this.size;
-        await this.startDrawingLine((x0 - dd), (y0 - dd), (x0 + dd), (y0 + dd),20);
-        await this.startDrawingLine((x0 - dd), (y0 + dd), (x0 + dd), (y0 - dd), 20);
+        const xy = [[(x0 - dd), (y0 - dd), (x0 + dd), (y0 + dd)], [(x0 - dd), (y0 + dd), (x0 + dd), (y0 - dd)]];
+        return xy;
     }
 
-    startDrawingWin(r0, c0, r1, c1) {
-        ctx.beginPath();
+    drawWin(r0, c0, r1, c1) {
+        Main.ctx.beginPath();
         Main.ctx.strokeStyle = "#ff0000";
         const x0 = this.X0 + c0 * this.size;
         const y0 = this.Y0 + r0 * this.size;
         const x1 = this.X0 + c1 * this.size;
         const y1 = this.Y0 + r1 * this.size;
-        return this.startDrawingLine(x0, y0, x1, y1, 80, true);
+        return this.startDrawingLine(x0, y0, x1, y1, 40, true);
     }
 }

@@ -2,14 +2,14 @@ class Game {
     constructor () {
         this.artist = new Artist();
         this.allLines = [
-            [[0, 0], [0, 1], [0, 2]],
-            [[1, 0], [1, 1], [1, 2]],
-            [[2, 0], [2, 1], [2, 2]],
-            [[0, 0], [1, 0], [2, 0]],
-            [[0, 1], [1, 1], [2, 1]],
-            [[0, 2], [1, 2], [2, 2]],
-            [[0, 0], [1, 1], [2, 2]],
-            [[2, 0], [1, 1], [0, 2]],
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [6, 4, 2],
         ];
         this.allCells = [
             {sign: -1, row: 0, col: 0, lines: [0,4,6]},
@@ -103,11 +103,11 @@ class Game {
     checkField(cell) {
         let lines = cell.lines;
         const sign = cell.sign;
-        let ok, line;
-        for (line of lines) {
+        let line, ok;
+        for (line of cell.lines) {
             ok = true;
-            for (let rc of this.allLines[line]) {
-                if (this.cellsMatrix[rc[0]][rc[1]].sign !== sign) {
+            for (let index of this.allLines[line]) {
+                if (this.allCells[index].sign !== sign) {
                     ok = false;
                     break;
                 }
@@ -117,7 +117,18 @@ class Game {
             }
         }
 
-        if (!ok) {
+        if (ok) {
+            this.artist.redrawCell(cell.row, cell.col, false, cell.sign);
+            const cell0 = this.allCells[this.allLines[line][0]];
+            const cell2 = this.allCells[this.allLines[line][2]];
+            this.artist.drawWin(cell0.row, cell0.col, cell2.row, cell2.col)
+                .then(() => {
+                    const label = this.youTurn ? 'You WON!!!' : 'You LOSE.';
+                    setTimeout(() => {
+                        document.dispatchEvent(new CustomEvent(glob.EVENT_END_GAME, {'detail': label}));
+                    }, 700);
+                })
+        } else {
             if (this.freeCells.size === 0) {
                 document.dispatchEvent(new CustomEvent(glob.EVENT_END_GAME, { 'detail': 'Field full.' }));
             } else {
@@ -127,22 +138,42 @@ class Game {
                     this.autoMove();
                 }
             }
-        } else {
-            this.artist.redrawCell(cell.row, cell.col, false, cell.sign);
-            this.artist.drawWin(...this.allLines[line][0], ...this.allLines[line][2])
-                .then(() => {
-                    const label = this.youTurn ? 'You WON!!!' : 'You LOSE.';
-                    setTimeout(() => {
-                        document.dispatchEvent(new CustomEvent(glob.EVENT_END_GAME, {'detail': label}));
-                    }, 700);
-                })
         }
     }
 
     autoMove(){
         setTimeout(()=>{
-            const cell = this.freeCells.get([...this.freeCells.keys()][Math.floor(Math.random() * this.freeCells.size)]).cell;
+            let youCells, aiCells, sign, winLine, cell;
+            for (let line of this.allLines) {
+                youCells = 0;
+                aiCells = 0;
+                for(let index of line) {
+                    sign = this.allCells[index].sign
+                    if (sign === this.youSign) {
+                        ++youCells;
+                    } else if(sign === this.aiSign) {
+                        ++aiCells;
+                    }
+                }
+                if (youCells>1 && aiCells===0) {
+                    winLine = line;
+                } else if (aiCells>1 && youCells===0) {
+                    winLine = line;
+                    break;
+                }
+            }
+            if (winLine) {
+                for(let index of winLine) {
+                    cell = this.allCells[index];
+                    if (cell.sign === -1) {
+                        break;
+                    }
+                }
+            } else {
+                cell = this.freeCells.get([...this.freeCells.keys()][Math.floor(Math.random() * this.freeCells.size)]).cell;
+            }
+
             this.makeMove(cell, this.aiSign);
-        }, (200 + Math.random() * 500))
+        }, (300 + Math.random() * 400))
     }
 }

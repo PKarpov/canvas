@@ -1,17 +1,22 @@
 class Main {
     constructor() {
-        this.canvas = document.getElementById("canvas");
-        Main.ctx = this.canvas.getContext("2d");
-        Main.width = this.canvas.width;
-        Main.height = this.canvas.height;
+        Main.canvas = document.getElementById("canvas");
+        var rect = Main.canvas.getBoundingClientRect();
+        console.log(rect);
+        Main.ctx = Main.canvas.getContext("2d");
+        Main.width = Main.canvas.width;
+        Main.height = Main.canvas.height;
+        Button.width = 440;
+        Button.height = 110;
 
-        this.start = new Menu(["PLAY GAME", "GO OUT"], [glob.EVENT_PLAY_ADS, glob.EVENT_EXIT]);
-        this.final = new Menu(["PLAY AGAIN", "GO OUT"], [glob.EVENT_PLAY_ADS, glob.EVENT_EXIT]);
-        // this.start = new Menu(["PLAY GAME", "GO OUT"], [glob.EVENT_PLAY_GAME, glob.EVENT_EXIT]);
-        // this.final = new Menu(["PLAY AGAIN", "GO OUT"], [glob.EVENT_PLAY_GAME, glob.EVENT_EXIT]);
+        // this.start = new Menu(["PLAY GAME", "GO OUT"], [glob.EVENT_PLAY_ADS, glob.EVENT_EXIT]);
+        // this.final = new Menu(["PLAY AGAIN", "GO OUT"], [glob.EVENT_PLAY_ADS, glob.EVENT_EXIT]);
+        this.start = new Menu(["PLAY GAME", "GO OUT"], [glob.EVENT_PLAY_GAME, glob.EVENT_EXIT]);
+        this.final = new Menu(["PLAY AGAIN", "GO OUT"], [glob.EVENT_PLAY_GAME, glob.EVENT_EXIT]);
         this.game = new Game();
 
         document.addEventListener("keydown", (e)=>{this.keyDownHandler(e)});
+        Main.canvas.addEventListener("pointer", (e)=>{this.keyDownHandler(e)});
         document.addEventListener(glob.EVENT_PLAY_GAME, ()=>{
             this.game.drawNew();
             this.setState('game');
@@ -54,7 +59,7 @@ class Main {
 }
 
 window.onload = ()=>{
-    new Ads();
+    // new Ads();
     new Main();
 };
 

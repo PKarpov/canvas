@@ -1,0 +1,15 @@
+canvas {
+  position: absolute;
+  top: calc(50% - 360px);
+  left: calc(50% - 640px);
+  background: #eee;
+}
+
+#adContainer {
+  position: absolute;
+  top: calc(50% - 360px);
+  left: calc(50% - 640px);
+
+}
+
+

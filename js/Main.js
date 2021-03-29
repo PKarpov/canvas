@@ -1,22 +1,25 @@
 class Main {
     constructor() {
         Main.canvas = document.getElementById("canvas");
-        var rect = Main.canvas.getBoundingClientRect();
-        console.log(rect);
         Main.ctx = Main.canvas.getContext("2d");
         Main.width = Main.canvas.width;
         Main.height = Main.canvas.height;
         Button.width = 440;
         Button.height = 110;
-
-        // this.start = new Menu(["PLAY GAME", "GO OUT"], [glob.EVENT_PLAY_ADS, glob.EVENT_EXIT]);
-        // this.final = new Menu(["PLAY AGAIN", "GO OUT"], [glob.EVENT_PLAY_ADS, glob.EVENT_EXIT]);
-        this.start = new Menu(["PLAY GAME", "GO OUT"], [glob.EVENT_PLAY_GAME, glob.EVENT_EXIT]);
-        this.final = new Menu(["PLAY AGAIN", "GO OUT"], [glob.EVENT_PLAY_GAME, glob.EVENT_EXIT]);
+        const showAds = true;
+        if (showAds) {
+            new Ads();
+            this.start = new Menu(["PLAY GAME", "GO OUT"], [glob.EVENT_PLAY_ADS, glob.EVENT_EXIT]);
+            this.final = new Menu(["PLAY AGAIN", "GO OUT"], [glob.EVENT_PLAY_ADS, glob.EVENT_EXIT]);
+            Main.info = 'keyboard control(arrows + Enter + Backspace)';
+        } else {
+            this.start = new Menu(["PLAY GAME", "GO OUT"], [glob.EVENT_PLAY_GAME, glob.EVENT_EXIT]);
+            this.final = new Menu(["PLAY AGAIN", "GO OUT"], [glob.EVENT_PLAY_GAME, glob.EVENT_EXIT]);
+            Main.canvas.addEventListener("mousedown", (e)=>{this.keyDownHandler({key:'Enter'})});
+            Main.canvas.addEventListener("mousemove", (e)=>{this.mouseMove(e)});
+            Main.info = 'control mouse or keyboard(arrows + Enter + Backspace)';
+        }
         this.game = new Game();
-
-        document.addEventListener("keydown", (e)=>{this.keyDownHandler(e)});
-        Main.canvas.addEventListener("pointer", (e)=>{this.keyDownHandler(e)});
         document.addEventListener(glob.EVENT_PLAY_GAME, ()=>{
             this.game.drawNew();
             this.setState('game');
@@ -29,7 +32,8 @@ class Main {
         document.addEventListener(glob.EVENT_EXIT, ()=>{ this.exitGame()});
 
         this.setState('start');
-        this.start.drawNew(0);
+        this.start.drawNew(-1);
+        document.addEventListener("keydown", (e)=>{this.keyDownHandler(e)});
     }
 
     setState(state) {
@@ -41,6 +45,7 @@ class Main {
             this.keyFiltr = "ArrowUp,ArrowDown,Enter".split(',');
         }
         this.state = state;
+        Main.busy = false;
     }
 
     exitGame() {
@@ -56,10 +61,15 @@ class Main {
             this[this.state].takeAction(key);
         }
     }
+
+    mouseMove(e) {
+        if(Main.busy) return;
+        var rect = Main.canvas.getBoundingClientRect();
+        this[this.state].mouseMove((e.clientX - rect.left), (e.clientY - rect.top));
+    }
 }
 
 window.onload = ()=>{
-    // new Ads();
     new Main();
 };
 

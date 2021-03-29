@@ -8,6 +8,18 @@ class Artist {
         this.zeroSize = 60;
         this.X0 = Main.width * 0.5 - this.size;
         this.Y0 = Main.height * 0.5 - this.size;
+
+        this.areas = [[], [], []];
+        const dd = this.padSize * 0.5;
+        let x0, y0;
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
+                x0 = this.X0 + col * this.size;
+                y0 = this.Y0 + row * this.size;
+                this.areas[row][col] = [x0 - dd, y0 - dd, x0 + dd, y0 + dd, x0, y0];
+            }
+        }
+
     }
 
     getField(){
@@ -39,7 +51,7 @@ class Artist {
         ctx.fillStyle = "#ffc448";
         ctx.font = "24px system-ui";
         ctx.textAlign  = "left";
-        ctx.fillText('keyboard control (arrows + Enter + Backspace)', 20, 710);
+        ctx.fillText(Main.info, 20, 710);
     }
 
     async drawLines(lines, speed = 70) {
@@ -82,19 +94,20 @@ class Artist {
     }
 
     redrawCell(row, col, pad, sign) {
+        let area = this.areas[row][col];
         const ctx = Main.ctx;
-        const x0 = this.X0 + col * this.size;
-        const y0 = this.Y0 + row * this.size;
-        const xx = x0 - this.padSize * 0.5;
-        const yy = y0 - this.padSize * 0.5;
-        ctx.clearRect(xx, yy, this.padSize, this.padSize);
+        const x0 = area[4];
+        const y0 = area[5];
+        // const xx = x0 - this.padSize * 0.5;
+        // const yy = y0 - this.padSize * 0.5;
+        ctx.clearRect(area[0], area[1], this.padSize, this.padSize);
         ctx.fillStyle = "#fbffd1";
         if (pad) {
-            ctx.fillRect(xx, yy, this.padSize, this.padSize);
+            ctx.fillRect(area[0], area[1], this.padSize, this.padSize);
         }
         if (sign === 0) {
             ctx.beginPath();
-            ctx.arc(x0,y0,this.zeroSize,0,Math.PI*2);
+            ctx.arc(x0, y0, this.zeroSize, 0, Math.PI * 2);
             ctx.stroke();
         } else if (sign === 1){
             const dd = this.crossSize;
@@ -126,8 +139,9 @@ class Artist {
     }
 
     startDrawingZero (col, row) {
-        this.x0 = this.X0 + col * this.size;
-        this.y0 = this.Y0 + row * this.size;
+        const area = this.areas[row][col];
+        this.x0 = area[4];
+        this.y0 = area[5];
         this.angle = 0;
         this.dAngle = 0.4;
         requestAnimationFrame(() => this.drawingZero());
@@ -137,9 +151,10 @@ class Artist {
     }
 
     getCross(col, row) {
+        const area = this.areas[row][col];
+        const x0 = area[4];
+        const y0 = area[5];
         const dd = this.crossSize;
-        const x0 = this.X0 + col * this.size;
-        const y0 = this.Y0 + row * this.size;
         const xy = [[(x0 - dd), (y0 - dd), (x0 + dd), (y0 + dd)], [(x0 - dd), (y0 + dd), (x0 + dd), (y0 - dd)]];
         return xy;
     }
